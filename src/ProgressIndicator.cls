@@ -28,7 +28,6 @@ Private Const VBERR_MEMBER_NOT_FOUND As Long = 438
 Public Enum ProgressIndicatorError
     Error_NotInitialized = vbObjectError + 1001
     Error_ProcedureNotFound
-    Error_InvalidOperation
 End Enum
 
 Private Type TProgressIndicator

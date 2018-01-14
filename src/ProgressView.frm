@@ -41,10 +41,6 @@ Public Sub Update( _
     
 End Sub
 
-Public Property Get CurrentProgress() As Double
-    CurrentProgress = ProgressBar.Width / PROGRESSBAR_MAXWIDTH
-End Property
-
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If CloseMode = VbQueryClose.vbFormControlMenu Then
         Cancel = True
