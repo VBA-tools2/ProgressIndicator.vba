@@ -7,17 +7,23 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
+
 Option Explicit
 
 Private Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
+'==============================================================================
 Private Const DEFAULT_CAPTION As String = "Progress"
 Private Const DEFAULT_LABEL As String = "Please wait..."
 
-Private Const ERR_NOT_INITIALIZED As String = "ProgressIndicator is not initialized."
-Private Const ERR_PROC_NOT_FOUND As String = "Specified macro or object member was not found."
-Private Const ERR_INVALID_OPERATION As String = "Worker procedure cannot be cancelled by assigning to this property."
+Private Const ERR_NOT_INITIALIZED As String = _
+        "ProgressIndicator is not initialized."
+Private Const ERR_PROC_NOT_FOUND As String = _
+        "Specified macro or object member was not found."
+Private Const ERR_INVALID_OPERATION As String = _
+        "Worker procedure cannot be cancelled by assigning to this property."
 Private Const VBERR_MEMBER_NOT_FOUND As Long = 438
+'==============================================================================
 
 Public Enum ProgressIndicatorError
     Error_NotInitialized = vbObjectError + 1001
@@ -34,121 +40,140 @@ Private Type TProgressIndicator
     currentProgressValue As Double
 End Type
 
-Private this As TProgressIndicator
-Private WithEvents view As ProgressView
-Attribute view.VB_VarHelpID = -1
+Private This As TProgressIndicator
+Private WithEvents View As ProgressView
+Attribute View.VB_VarHelpID = -1
 
 Private Sub Class_Initialize()
-    Set view = New ProgressView
-    view.Caption = DEFAULT_CAPTION
-    view.ProgressLabel = DEFAULT_LABEL
+    Set View = New ProgressView
+    View.Caption = DEFAULT_CAPTION
+    View.ProgressLabel = DEFAULT_LABEL
 End Sub
 
 Private Sub Class_Terminate()
-    Set view = Nothing
-    Set this.instance = Nothing
+    Set View = Nothing
+    Set This.instance = Nothing
 End Sub
 
-Private Function QualifyMacroName(ByVal book As Workbook, ByVal procedure As String) As String
+Private Function QualifyMacroName( _
+    ByVal book As Workbook, _
+    ByVal procedure As String _
+        ) As String
     QualifyMacroName = "'" & book.FullName & "'!" & procedure
 End Function
 
-Public Function Create(ByVal procedure As String, Optional instance As Object = Nothing, Optional ByVal initialLabelValue As String, Optional ByVal initialCaptionValue As String, Optional ByVal completedSleepMilliseconds As Long = 1000, Optional canCancel As Boolean = False) As ProgressIndicator
- 
-    Dim result As ProgressIndicator
-    Set result = New ProgressIndicator
+Public Function Create( _
+    ByVal procedure As String, _
+    Optional instance As Object = Nothing, _
+    Optional ByVal initialLabelValue As String, _
+    Optional ByVal initialCaptionValue As String, _
+    Optional ByVal completedSleepMilliseconds As Long = 1000, _
+    Optional canCancel As Boolean = False _
+        ) As ProgressIndicator
     
-    result.Cancellable = canCancel
-    result.SleepMilliseconds = completedSleepMilliseconds
- 
+    Dim Result As ProgressIndicator
+    Set Result = New ProgressIndicator
+    
+    Result.Cancellable = canCancel
+    Result.SleepMilliseconds = completedSleepMilliseconds
+    
     If Not instance Is Nothing Then
-        Set result.OwnerInstance = instance
+        Set Result.OwnerInstance = instance
     ElseIf InStr(procedure, "'!") = 0 Then
         procedure = QualifyMacroName(Application.ActiveWorkbook, procedure)
     End If
- 
-    result.ProcedureName = procedure
- 
-    If initialLabelValue <> vbNullString Then result.ProgressView.ProgressLabel = initialLabelValue
-    If initialCaptionValue <> vbNullString Then result.ProgressView.Caption = initialCaptionValue
-
-    Set Create = result
- 
+    
+    Result.ProcedureName = procedure
+    
+    If initialLabelValue <> vbNullString Then _
+            Result.ProgressView.ProgressLabel = initialLabelValue
+    If initialCaptionValue <> vbNullString Then _
+            Result.ProgressView.Caption = initialCaptionValue
+    
+    Set Create = Result
+    
 End Function
 
 Friend Property Get ProgressView() As ProgressView
-    Set ProgressView = view
+    Set ProgressView = View
 End Property
 
 Friend Property Get ProcedureName() As String
-    ProcedureName = this.procedure
+    ProcedureName = This.procedure
 End Property
 
-Friend Property Let ProcedureName(ByVal value As String)
-    this.procedure = value
+Friend Property Let ProcedureName(ByVal Value As String)
+    This.procedure = Value
 End Property
 
 Friend Property Get OwnerInstance() As Object
-    Set OwnerInstance = this.instance
+    Set OwnerInstance = This.instance
 End Property
 
-Friend Property Set OwnerInstance(ByVal value As Object)
-    Set this.instance = value
+Friend Property Set OwnerInstance(ByVal Value As Object)
+    Set This.instance = Value
 End Property
 
 Friend Property Get SleepMilliseconds() As Long
-    SleepMilliseconds = this.sleepDelay
+    SleepMilliseconds = This.sleepDelay
 End Property
 
-Friend Property Let SleepMilliseconds(ByVal value As Long)
-    this.sleepDelay = value
+Friend Property Let SleepMilliseconds(ByVal Value As Long)
+    This.sleepDelay = Value
 End Property
 
 Public Property Get CurrentProgress() As Double
-    CurrentProgress = this.currentProgressValue
+    CurrentProgress = This.currentProgressValue
 End Property
 
 Public Property Get Cancellable() As Boolean
-    Cancellable = this.canCancel
+    Cancellable = This.canCancel
 End Property
 
-Friend Property Let Cancellable(ByVal value As Boolean)
-    this.canCancel = value
+Friend Property Let Cancellable(ByVal Value As Boolean)
+    This.canCancel = Value
 End Property
 
 Public Property Get IsCancelRequested() As Boolean
-    IsCancelRequested = this.cancelling
+    IsCancelRequested = This.cancelling
 End Property
 
 Public Sub AbortCancellation()
-    Debug.Assert this.cancelling
-    this.cancelling = False
+Debug.Assert This.cancelling
+    This.cancelling = False
 End Sub
 
 Public Sub Execute()
-    view.Show vbModal
+    View.Show vbModal
 End Sub
 
-Public Sub Update(ByVal percentValue As Double, Optional ByVal labelValue As String, Optional ByVal captionValue As String)
-
+Public Sub Update( _
+    ByVal percentValue As Double, _
+    Optional ByVal labelValue As String, _
+    Optional ByVal captionValue As String _
+)
+    
     On Error GoTo CleanFail
     ThrowIfNotInitialized
-
+    
     ValidatePercentValue percentValue
-    this.currentProgressValue = percentValue
- 
-    view.Update this.currentProgressValue, labelValue
-
+    This.currentProgressValue = percentValue
+    
+    View.Update This.currentProgressValue, labelValue
+    
 CleanExit:
-    If percentValue = 1 Then Sleep 1000          ' pause on completion
+    If percentValue = 1 Then Sleep 1000          'pause on completion
     Exit Sub
-
+    
 CleanFail:
     MsgBox Err.Number & vbTab & Err.Description, vbCritical, "Error"
     Resume CleanExit
 End Sub
 
-Public Sub UpdatePercent(ByVal percentValue As Double, Optional ByVal captionValue As String)
+Public Sub UpdatePercent( _
+    ByVal percentValue As Double, _
+    Optional ByVal captionValue As String _
+)
     ValidatePercentValue percentValue
     Update percentValue, Format$(percentValue, "0.0% Completed")
 End Sub
@@ -158,26 +183,27 @@ Private Sub ValidatePercentValue(ByRef percentValue As Double)
 End Sub
 
 Private Sub ThrowIfNotInitialized()
-    If this.procedure = vbNullString Then
-        Err.Raise ProgressIndicatorError.Error_NotInitialized, TypeName(Me), ERR_NOT_INITIALIZED
+    If This.procedure = vbNullString Then
+        Err.Raise ProgressIndicatorError.Error_NotInitialized, _
+                TypeName(Me), ERR_NOT_INITIALIZED
     End If
 End Sub
 
-Private Sub view_Activated()
-
+Private Sub View_Activated()
+    
     On Error GoTo CleanFail
     ThrowIfNotInitialized
-
-    If Not this.instance Is Nothing Then
+    
+    If Not This.instance Is Nothing Then
         ExecuteInstanceMethod
     Else
         ExecuteMacro
     End If
-
+    
 CleanExit:
-    view.Hide
+    View.Hide
     Exit Sub
-
+    
 CleanFail:
     MsgBox Err.Number & vbTab & Err.Description, vbCritical, "Error"
     Resume CleanExit
@@ -185,41 +211,55 @@ End Sub
 
 Private Sub ExecuteMacro()
     On Error GoTo CleanFail
-    Application.Run this.procedure, Me
-
+    Application.Run This.procedure, Me
+    
 CleanExit:
     Exit Sub
-
+    
 CleanFail:
     If Err.Number = VBERR_MEMBER_NOT_FOUND Then
-        Err.Raise ProgressIndicatorError.Error_ProcedureNotFound, TypeName(Me), ERR_PROC_NOT_FOUND
+        Err.Raise ProgressIndicatorError.Error_ProcedureNotFound, _
+                TypeName(Me), ERR_PROC_NOT_FOUND
     Else
-        Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
+        Err.Raise _
+                Err.Number, _
+                Err.Source, _
+                Err.Description, _
+                Err.HelpFile, _
+                Err.HelpContext
     End If
     Resume CleanExit
 End Sub
 
 Private Sub ExecuteInstanceMethod()
     On Error GoTo CleanFail
- 
+    
     Dim parameter As ProgressIndicator
-    Set parameter = Me                           'Me cannot be passed to CallByName directly
-
-    CallByName this.instance, this.procedure, VbMethod, parameter
-
+    Set parameter = Me            'Me cannot be passed to CallByName directly
+    
+    CallByName This.instance, This.procedure, VbMethod, parameter
+    
 CleanExit:
     Exit Sub
-
+    
 CleanFail:
     If Err.Number = VBERR_MEMBER_NOT_FOUND Then
-        Err.Raise ProgressIndicatorError.Error_ProcedureNotFound, TypeName(Me), ERR_PROC_NOT_FOUND
+        Err.Raise _
+                ProgressIndicatorError.Error_ProcedureNotFound, _
+                TypeName(Me), _
+                ERR_PROC_NOT_FOUND
     Else
-        Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
+        Err.Raise _
+                Err.Number, _
+                Err.Source, _
+                Err.Description, _
+                Err.HelpFile, _
+                Err.HelpContext
     End If
     Resume CleanExit
 End Sub
 
-Private Sub view_Cancelled()
-    If Not this.canCancel Then Exit Sub
-    this.cancelling = True
+Private Sub View_Cancelled()
+    If Not This.canCancel Then Exit Sub
+    This.cancelling = True
 End Sub
