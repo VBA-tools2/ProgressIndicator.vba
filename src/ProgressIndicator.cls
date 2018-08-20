@@ -21,7 +21,7 @@ Private Const ERR_NOT_INITIALIZED As String = _
 Private Const ERR_PROC_NOT_FOUND As String = _
         "Specified macro or object member was not found."
 Private Const ERR_INVALID_OPERATION As String = _
-        "Worker procedure cannot be cancelled by assigning to this property."
+        "Worker procedure cannot be canceled by assigning to this property."
 Private Const VBERR_MEMBER_NOT_FOUND As Long = 438
 '==============================================================================
 
