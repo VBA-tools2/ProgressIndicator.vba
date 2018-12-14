@@ -158,7 +158,7 @@ Public Sub Update( _
     ValidatePercentValue percentValue
     This.currentProgressValue = percentValue
     
-    View.Update This.currentProgressValue, labelValue
+    View.Update This.currentProgressValue, labelValue, captionValue
     
 CleanExit:
     If percentValue = 1 Then Sleep 1000          'pause on completion
@@ -174,7 +174,7 @@ Public Sub UpdatePercent( _
     Optional ByVal captionValue As String _
 )
     ValidatePercentValue percentValue
-    Update percentValue, Format$(percentValue, "0.0% Completed")
+    Update percentValue, Format$(percentValue, "0.0% Completed"), captionValue
 End Sub
 
 Private Sub ValidatePercentValue(ByRef percentValue As Double)
