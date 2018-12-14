@@ -17,7 +17,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 '==============================================================================
-Private Const PROGRESSBAR_MAXWIDTH As Integer = 224
+Private Const PROGRESSBAR_MAXWIDTH As Long = 224
 '==============================================================================
 
 Public Event Activated()
