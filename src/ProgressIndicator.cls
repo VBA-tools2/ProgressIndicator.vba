@@ -8,6 +8,10 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 
+'@Exposed
+'@PredeclaredId
+'@Folder("ProgressIndicator")
+
 Option Explicit
 
 Private Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)

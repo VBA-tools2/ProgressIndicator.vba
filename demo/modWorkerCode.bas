@@ -1,5 +1,7 @@
 Attribute VB_Name = "modWorkerCode"
 
+'@Folder("ProgressIndicator")
+
 Option Explicit
 
 Public Sub DoSomething()
