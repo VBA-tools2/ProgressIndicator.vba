@@ -5,9 +5,15 @@ Attribute VB_Name = "modWorkerCode"
 Option Explicit
 
 Public Sub DoSomething()
+    'comment the next line if you also want to see the values changing
+    'on the worksheet. Of course this will take much longer then.
+    Application.ScreenUpdating = False
+    
     With ProgressIndicator.Create("DoWork", canCancel:=True)
         .Execute
     End With
+    
+    Application.ScreenUpdating = True
 End Sub
 
 Public Sub DoWork(ByVal progress As ProgressIndicator)
