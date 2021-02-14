@@ -65,6 +65,17 @@ Private Function QualifyMacroName( _
     QualifyMacroName = "'" & book.FullName & "'!" & procedure
 End Function
 
+Private Function EnsureQualifiedMacroName( _
+    ByVal procedure As String _
+        ) As String
+    
+    Dim Parts() As String
+    Parts = Split(procedure, "!")
+    
+    EnsureQualifiedMacroName = "'" & Parts(0) & "'!" & Parts(1)
+    
+End Function
+
 Public Function Create( _
     ByVal procedure As String, _
     Optional instance As Object = Nothing, _
@@ -82,8 +93,10 @@ Public Function Create( _
     
     If Not instance Is Nothing Then
         Set Result.OwnerInstance = instance
-    ElseIf InStr(procedure, "'!") = 0 Then
+    ElseIf InStr(procedure, "!") = 0 Then
         procedure = QualifyMacroName(Application.ActiveWorkbook, procedure)
+    ElseIf InStr(procedure, "'!") = 0 Then
+        procedure = EnsureQualifiedMacroName(procedure)
     End If
     
     Result.ProcedureName = procedure
