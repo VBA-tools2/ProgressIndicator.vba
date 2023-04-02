@@ -1,0 +1,214 @@
+
+= ProgressIndicator.vba
+:experimental:
+:icons:         // not sure if this is needed
+:demodir: ../demo
+:sourcedir: ../src
+:uri-commit-messages: https://www.conventionalcommits.org
+:uri-rubberduck-ProgressIndicator: https://rubberduckvba.wordpress.com/2018/01/12/progress-indicator/
+:uri-GitHub-FirstContribution: https://github.com/firstcontributions/first-contributions
+:uri-license: https://choosealicense.com/licenses/mit/
+:uri-rubberduck: https://rubberduckvba.com/
+:uri-UnitTests: https://en.wikipedia.org/wiki/Unit_testing
+// show the corresponding icons on GitHub, because otherwise "just" the text will be shown
+ifdef::env-github[]
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :information_source:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+Excel VBA class for a Reusable Progress Indicator.
+
+This is essentially a republish of Mathieu Guindon's (aka Mat's Mug) article {uri-rubberduck-ProgressIndicator}.
+So all credits go to him!
+
+Because I couldn't find a repository for this project yet, here now is one.
+The main reason for this repository is to bundle all improvements at one point.
+
+== Features
+
+* modeless
+* reusable
+
+== Prerequisites / Dependencies
+
+Since this is an Excel VBA class you obviously need Microsoft Excel.
+
+[#how-to-install]
+== How to install / Getting started
+
+You have two choices.
+Either you add the files to a project directly where you want to use it, or you create an AddIn which than can be used by every project, if needed.
+Nonetheless, the necessary steps to be able to prepare the usage of the progress indicator are the same.
+
+Add the file(s) from the link:{sourcedir}[src] folder to your project.
+Yes, it's that simple.
+
+._If you need some more advice on how to do that, expand me._
+[%collapsible]
+====
+. Open Microsoft Excel.
+. Open the Visual Basic Editor (VBE) (kbd:[Alt+F11]).
+. Add the file(s) in the link:{sourcedir}[src] folder to your VBA project.
+** With {uri-rubberduck}[Rubberduck]:
+.. Right-click on the project to which you want to add the file(s) in the "`Code Explorer`" (to show it press kbd:[Ctrl+R]) and click on menu:Add[Existing Files...].
+.. Select all files in the link:{sourcedir}[src] folder and click on btn:[Open].
+** Without Rubberduck:
+.. Select all except the `+.frx+` files in the link:{sourcedir}[src] folder in Windows File Explorer.
+.. Drag-and-drop them to the corresponding project in VBE's "`Project Explorer`". +
+   (To show it press kbd:[Ctrl+R].
+   Hit it twice if the Code Explorer shows up first.)
+// BUG: "project name" can't be put in normal angle brackets, because the closing bracket would be interpreted as menu delimiter. I couldn't find a way how to "escape" that (i.e. a backslash didn't work). Thus, single guillemets are used.
+. Check, if there are obvious errors by compiling the project (menu:Debug[Compile ‹project name›]).
+. Save the file/project.
+.. Be sure that the file/project you want to save is "`active`" in the VBE by checking, if its name is shown in VBE's title bar. +
+   (If it's not, open a (class) module of the corresponding project (and close it again).)
+.. Press the "`Save`" button (the disc symbol similar to 💾) in VBE's toolbar.
+.. Check that the file (really) was saved by having a look at the "`last modified date`" of the (project) file in the Windows File Explorer.
+====
+
+[#usage]
+== Usage / Show it in action
+
+To show the progress indicator in action, you may add the "`worker`" code to a project.
+It is located in the link:{demodir}[demo] folder.
+It is a (slightly modified) dummy example given in the above mentioned article.
+
+[TIP]
+====
+Have a look at the collapsible block in the <<how-to-install>> section.
+====
+
+._If you just want to see the code for now, to get an impression on what to do, please expand me._
+[%collapsible]
+====
+[source,vba]
+----
+Option Explicit
+
+Public Sub DoSomething()
+    'comment the next line if you also want to see the values changing
+    'on the worksheet. Of course this will take much longer then.
+    Application.ScreenUpdating = False
+    
+    With ProgressIndicator.Create("DoWork", canCancel:=True)
+        .Execute
+    End With
+    
+    Application.ScreenUpdating = True
+End Sub
+
+Public Sub DoWork(ByVal progress As ProgressIndicator)
+    Dim i As Long
+    For i = 1 To 10000
+        If ShouldCancel(progress) Then
+            'here more complex worker code could rollback & cleanup
+            Exit Sub
+        End If
+        ActiveSheet.Cells(1, 1) = i
+        progress.Update i / 10000              'show only the bar
+'        progress.UpdatePercent i / 10000       'show also percentage value
+    Next
+End Sub
+
+Private Function ShouldCancel(ByVal progress As ProgressIndicator) As Boolean
+    If progress.IsCancelRequested Then
+        If MsgBox("Cancel this operation?", vbYesNo) = vbYes Then
+            ShouldCancel = True
+        Else
+            progress.AbortCancellation
+        End If
+    End If
+End Function
+----
+====
+
+* If you added the worker code to the same project, where also the progress indicator source files are present, then it will immediately work, i.e. run the `+DoSomething+` procedure.
+* If you added the worker code to another project, you first need to add a reference to the AddIn where the progress indicator source is stored in.
++
+._If you don't have a clue how to do that, expand me._
+[%collapsible]
+====
+I'll abbreviate the AddIn which contains the progress indicator source "`PI`" for simplicity.
+
+* With {uri-rubberduck}[Rubberduck]:
+. Right-click somewhere on the project in the Code Explorer and click on menu:Add/Remove{sp}References...[].
+. Switch to the menu:Projects[] tab.
+. Add the reference.
+.. Type (parts of) the library name in the search box until you see it in below (left) list or it is empty.
+** If the PI AddIn file name is in the lower left list box:
+... Select the library in the (left) list and
+... click on the btn:[➨] button to add it to the project references. +
+** If the the PI AddIn file name is _not_ in the list:
+... Click on the btn:[Browse...] button.
+... Browse to the folder where the PI AddIn is located.
+... Select the PI AddIn and
+... press the btn:[Open] button.
+. Click on the btn:[OK] button to close the window.
+* Without Rubberduck:
+. Open the Reference manager in the VBE (menu:Tools[References...]).
+** If the PI AddIn project name is in the list of available references:
+.. Add a checkmark to the corresponding library.
+** If it's _not_ in the list:
+.. Click on the btn:[Browse...] button.
+.. Most likely change the file extension filter in the lower right to `+Microsoft Excel Files (*.xlsm;*.xlam;*.xls)+`
+.. Browse to the folder where the PI AddIn is located.
+.. Select the PI AddIn and
+.. press the btn:[Open] button.
+. Click on the btn:[OK] button to close the window.
+. Save the file/project.
+====
+
+== Running Tests
+
+Yes, {uri-UnitTests}[Unit Tests] in Excel _are_ possible.
+(For that you need to have the awesome {uri-rubberduck}[Rubberduck] AddIn installed (and enabled).)
+
+Unfortunately Mathieu missed to add them to his code (shame on you 😇).
+And my skills aren't good enough to know how to create automated tests/unit tests for this project.
+If you have an idea, I'd love to see it!
+Please add an issue or – even better – a pull request (see the <<#contributing>> section).
+
+But of course one can manually test it, as I already stated in the previous section (<<usage>>).
+
+== Used By
+
+No public projects that I am aware of.
+But I use it for some non-public code.
+
+== Known issues and limitations
+
+None that I am aware of.
+
+[#contributing]
+== Contributing
+
+All contributions are highly welcome!!
+
+If you are new to git/GitHub, please have a look at {uri-GitHub-FirstContribution} where you will find a lot of useful information for beginners.
+
+I recently was pointed to {uri-commit-messages} which sounds very promising.
+I will use them from now on too (and hopefully don't forget it in a hurry).
+
+== FAQ
+
+[qanda]
+What are the `+'@...+` comments good for in the code?::
+You should really have a look at the awesome {uri-rubberduck}[Rubberduck] project!
+
+== Similar Projects
+
+At present I am aware of
+
+* https://github.com/cristianbuse/Excel-VBA-ProgressBar[]
+
+which is very impressive.
+You should really check it out.
+
+If _you_ know more similar projects, please let me know.
+
+== License
+
+{uri-license}[MIT]
